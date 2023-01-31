@@ -104,9 +104,9 @@ const Game = () => {
                 dispatch({ type: "SET_ROOMS", payload: message.rooms });
             }
             if (type === "kick") {
-                // window.location.reload();
-                // window.onload = () => setDisconnectError(true);
-                dispatch({ type: "SET_DISCONNECT_ERROR", payload: true });
+                window.onload = () =>
+                    dispatch({ type: "SET_DISCONNECT_ERROR", payload: true });
+                window.location.reload();
             }
             if (type === "start") {
                 dispatch({
