@@ -35,3 +35,24 @@
   .board.turn {
     animation: pulse 1.5s infinite;
   }
+
+  .container{
+    width: 150px;
+    height: 150px;
+    position: relative;
+    margin: 30px;
+    display:inline-block;
+  }
+
+  .selecting {
+    position: absolute;
+    width: fit-content;
+  }
+  .selecting:hover {
+    animation: pulse 1.5s infinite;
+    cursor: grab;
+  }
+
+  .selecting.turn {
+    animation: pulse 1.5s infinite;
+  }

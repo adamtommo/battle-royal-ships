@@ -20,34 +20,38 @@ const Board = (props: BoardInterface) => {
             click &&
             props.turn &&
             props.player === "Opponent" &&
-            board[i] === "empty"
+            board[i] === "empty" &&
+            props.fire
         ) {
-            props.fire(i, false);
+            console.log(`FIRE`);
+            props.fire(i);
         }
     };
 
     return (
         <>
-            <Alert variant="dark">{props.player}</Alert>
+            {props.tiny ? null : <Alert variant="dark">{props.player}</Alert>}
             <div
                 className={
                     props.turn && props.player === "Opponent"
                         ? cx(classes.board, classes.turn)
-                        : props.player !== "Opponent" && !props.turn
-                        ? cx(classes.board, classes.turn)
                         : classes.board
                 }
+                style={props.tiny ? { width: "100px", height: "100px" } : {}}
             >
-                {board.map((state: string, i: number) => {
-                    return (
-                        <GridSquare
-                            currentCoord={currentCoord}
-                            key={i}
-                            index={i}
-                            state={state}
-                        />
-                    );
-                })}
+                {props.boardNo !== undefined
+                    ? props.board.map((state: string, i: number) => {
+                          return (
+                              <GridSquare
+                                  currentCoord={currentCoord}
+                                  key={i}
+                                  index={i}
+                                  state={state}
+                                  tiny={props.tiny}
+                              />
+                          );
+                      })
+                    : null}
             </div>
         </>
     );

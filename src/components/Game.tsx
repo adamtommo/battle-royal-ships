@@ -5,34 +5,27 @@ import Board from "./board/Board";
 import { Alert, Button, Col, Container, Modal, Row } from "react-bootstrap";
 import { WelcomeScreen } from "./WelcomeScreen";
 import useWebSocket from "react-use-websocket";
-import { generateEmptyBoard } from "../utils/BoardFunctions";
-import { generateComputerBoard, computerFire } from "../utils/Computer";
 import { WS_URL } from "../WS";
-import {
-    ActionInterface,
-    GameBoardInterface,
-    StateInterface,
-} from "./interfaces/BoardInterface";
+import { ActionInterface, StateInterface } from "./interfaces/BoardInterface";
+import BoardSelect from "./board/BoardSelect";
 
 const Game = () => {
-    const emptyBoard: GameBoardInterface = {
-        board: generateEmptyBoard(),
-        shipLocations: [{ name: "null", location: [0] }],
-    };
-
-    const initialState = {
-        you: emptyBoard,
-        opponent: emptyBoard,
+    const initialState: StateInterface = {
+        you: [],
+        youNo: 0,
+        oppNo: 0,
+        opponents: [{ player: "DUMMY", board: [] }],
         rooms: [],
         selectedShip: "",
         gameState: "intro",
-        computer: false,
         fullError: false,
         disconnectError: false,
         waiting: false,
         yourTurn: false,
         winner: false,
         loser: false,
+        readyTotal: undefined,
+        playerTotal: undefined,
     };
 
     const gameReducer = (state: StateInterface, action: ActionInterface) => {
@@ -43,8 +36,6 @@ const Game = () => {
                 return { ...state, selectedShip: action.payload };
             case "SET_GAME_STATE":
                 return { ...state, gameState: action.payload };
-            case "SET_COMPUTER":
-                return { ...state, computer: action.payload };
             case "SET_FULL_ERROR":
                 return { ...state, fullError: action.payload };
             case "SET_DISCONNECT_ERROR":
@@ -60,22 +51,22 @@ const Game = () => {
             case "SET_YOU":
                 return { ...state, you: action.payload };
             case "SET_OPPONENT":
-                return { ...state, opponent: action.payload };
+                return { ...state, opponents: action.payload };
+            case "SET_YOU_NO":
+                return { ...state, youNo: action.payload };
+            case "SET_OPPONENT_NO":
+                return { ...state, oppNo: action.payload };
+            case "SET_PLAYER_TOTAL":
+                return { ...state, playerTotal: action.payload };
+            case "SET_READY_TOTAL":
+                return { ...state, readyTotal: action.payload };
             default:
                 return state;
         }
     };
     const [state, dispatch] = useReducer(gameReducer, initialState);
 
-    const {
-        // sendMessage,
-        sendJsonMessage,
-        lastMessage,
-        // lastJsonMessage,
-        // readyState,
-        // getWebSocket,
-    } = useWebSocket(WS_URL, {
-        // share: true,
+    const { sendJsonMessage, lastMessage } = useWebSocket(WS_URL, {
         onOpen() {
             console.log("Connection Established");
         },
@@ -87,9 +78,6 @@ const Game = () => {
             room: room,
             multiplayer: multiplayer,
         });
-        if (!multiplayer) {
-            dispatch({ type: "SET_COMPUTER", payload: true });
-        }
     };
 
     const isMounted = useRef(false);
@@ -104,6 +92,10 @@ const Game = () => {
             if (type === "room") {
                 if (message.allowed) {
                     dispatch({ type: "SET_GAME_STATE", payload: "setup" });
+                    dispatch({
+                        type: "SET_PLAYER_TOTAL",
+                        payload: undefined,
+                    });
                 } else {
                     dispatch({ type: "SET_FULL_ERROR", payload: true });
                 }
@@ -117,24 +109,15 @@ const Game = () => {
                 dispatch({ type: "SET_DISCONNECT_ERROR", payload: true });
             }
             if (type === "start") {
-                dispatch({ type: "SET_WAITING", payload: true });
+                dispatch({
+                    type: "SET_OPPONENT",
+                    payload: message.opponentBoards,
+                });
                 dispatch({ type: "SET_GAME_STATE", payload: "play" });
+                dispatch({ type: "SET_WAITING", payload: false });
             }
             if (type === "turn") {
-                dispatch({ type: "SET_WAITING", payload: !state.waiting });
                 dispatch({ type: "SET_YOUR_TURN", payload: !state.yourTurn });
-            }
-            if (type === "computerTurn") {
-                dispatch({ type: "SET_WAITING", payload: !state.waiting });
-                dispatch({ type: "SET_YOUR_TURN", payload: !state.yourTurn });
-                const computerOppBoard: string[] = message.board;
-                const coords: number = computerFire(computerOppBoard);
-                fire(coords, true);
-            }
-            if (type === "computerTurnAgain") {
-                const computerOppBoard: string[] = message.board;
-                const coords: number = computerFire(computerOppBoard);
-                fire(coords, true);
             }
             if (type === "setYou") {
                 dispatch({ type: "SET_YOU", payload: message.player });
@@ -143,17 +126,29 @@ const Game = () => {
                 dispatch({ type: "SET_OPPONENT", payload: message.player });
             }
             if (type === "win") {
-                console.log("win");
-                dispatch({ type: "SET_WAITING", payload: false });
-                dispatch({ type: "SET_YOUR_TURN", payload: false });
                 dispatch({ type: "SET_WINNER", payload: true });
-                dispatch({ type: "SET_COMPUTER", payload: false });
             }
             if (type === "lose") {
-                dispatch({ type: "SET_WAITING", payload: false });
-                dispatch({ type: "SET_YOUR_TURN", payload: false });
                 dispatch({ type: "SET_LOSER", payload: true });
-                dispatch({ type: "SET_COMPUTER", payload: false });
+            }
+            if (type === "playerTotal") {
+                dispatch({
+                    type: "SET_PLAYER_TOTAL",
+                    payload: message.playerTotal,
+                });
+            }
+            if (type === "readyTotal") {
+                dispatch({
+                    type: "SET_READY_TOTAL",
+                    payload: message.readyTotal,
+                });
+                console.log(message.readyTotal);
+            }
+            if (type === "endgame") {
+                dispatch({
+                    type: "SET_GAME_STATE",
+                    payload: "endgame",
+                });
             }
         } else {
             isMounted.current = true;
@@ -163,11 +158,12 @@ const Game = () => {
 
     const sendInitial = () => {
         dispatch({ type: "SET_WAITING", payload: true });
+        dispatch({ type: "SET_GAME_STATE", payload: "waiting" });
 
         //Sometimes sends the last ship placed as forbidden, this is to prevent this.
         const boardCheck = state.you;
         console.log(boardCheck);
-        boardCheck!.board.forEach((square: string, i: number) => {
+        boardCheck.board.forEach((square: string, i: number) => {
             if (square === "forbidden") {
                 boardCheck.board[i] = "ship";
             }
@@ -177,33 +173,22 @@ const Game = () => {
         sendJsonMessage({
             action: "setBoard",
             player: JSON.stringify(state.you),
-            opponent: JSON.stringify(generateEmptyBoard()),
         });
-
-        if (state.computer) {
-            sendJsonMessage({
-                action: "setBoard",
-                player: JSON.stringify(generateComputerBoard()),
-                opponent: JSON.stringify(generateEmptyBoard()),
-                computer: true,
-            });
-        }
     };
 
-    const fire = (i: number, computerFire: boolean) => {
-        if (computerFire) {
-            console.log("Thinking!");
-            setTimeout(() => {
-                sendJsonMessage({ action: "fire", where: i, computer: true });
-            }, 1000);
-        } else {
-            sendJsonMessage({ action: "fire", where: i, computer: false });
+    const fire = (i: number | undefined) => {
+        if (state.gameState !== "endgame") {
+            sendJsonMessage({
+                action: "fire",
+                where: i,
+                player: state.opponents[state.oppNo].player,
+            });
         }
     };
 
     return (
         <>
-            {state.gameState === "play" ? (
+            {state.gameState === "play" || state.gameState === "endgame" ? (
                 <>
                     <Modal show={state.winner}>
                         <Modal.Body>
@@ -213,10 +198,9 @@ const Game = () => {
                             <Button
                                 onClick={() => {
                                     dispatch({
-                                        type: "SET_GAME_STATE",
-                                        payload: "intro",
+                                        type: "SET_WINNER",
+                                        payload: false,
                                     });
-                                    window.location.reload();
                                 }}
                             >
                                 Return
@@ -231,10 +215,9 @@ const Game = () => {
                             <Button
                                 onClick={() => {
                                     dispatch({
-                                        type: "SET_GAME_STATE",
-                                        payload: "intro",
+                                        type: "SET_LOSER",
+                                        payload: false,
                                     });
-                                    window.location.reload();
                                 }}
                             >
                                 Return
@@ -243,8 +226,8 @@ const Game = () => {
                     </Modal>
                 </>
             ) : null}
-            {state.waiting && state.gameState === "setup" ? (
-                <Alert variant="info"> Waiting for other player</Alert>
+            {state.waiting ? (
+                <Alert variant="info"> Waiting to start</Alert>
             ) : null}
             {state.disconnectError ? (
                 <Alert
@@ -270,7 +253,7 @@ const Game = () => {
                     dismissible
                 >
                     {" "}
-                    Room is full!
+                    Room has started!
                 </Alert>
             ) : null}
             {state.gameState === "intro" ? (
@@ -299,25 +282,68 @@ const Game = () => {
                             />
                         ) : null}
 
-                        {state.gameState === "play" ? (
+                        {state.gameState === "play" ||
+                        state.gameState === "endgame" ? (
                             <Board
                                 board={state.you.board}
                                 player="You"
                                 turn={state.yourTurn}
                                 fire={fire}
+                                tiny={false}
+                                boardNo={state.youNo}
                             />
                         ) : null}
                     </Col>
                     <Col md="auto">
-                        {state.gameState === "play" ? (
+                        {(state.gameState === "play" ||
+                            state.gameState === "endgame") &&
+                        state.oppNo !== undefined ? (
                             <Board
-                                board={state.opponent.board}
+                                board={state.opponents[state.oppNo].board}
                                 player="Opponent"
                                 turn={state.yourTurn}
                                 fire={fire}
+                                tiny={false}
+                                boardNo={state.oppNo}
                             />
                         ) : null}
                     </Col>
+                </Row>
+                <Row>
+                    {state.readyTotal !== undefined &&
+                    state.gameState === "waiting" ? (
+                        <p>
+                            Ready: {state.readyTotal} Players Joined:{" "}
+                            {state.playerTotal}
+                        </p>
+                    ) : null}
+                    {state.readyTotal === state.playerTotal &&
+                    state.playerTotal > 1 ? (
+                        <Button
+                            size="lg"
+                            onClick={() => {
+                                sendJsonMessage({ action: "start" });
+                                dispatch({
+                                    type: "SET_READY_TOTAL",
+                                    payload: undefined,
+                                });
+                                dispatch({
+                                    type: "SET_GAME_STATE",
+                                    payload: "play",
+                                });
+                            }}
+                        >
+                            Start
+                        </Button>
+                    ) : null}
+                    {state.gameState === "play" ||
+                    state.gameState === "endgame" ? (
+                        <BoardSelect
+                            boards={state.opponents}
+                            setOppNo={dispatch}
+                            oppNo={state.oppNo}
+                        />
+                    ) : null}
                 </Row>
             </Container>
         </>

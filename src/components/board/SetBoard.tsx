@@ -134,6 +134,7 @@ const SetBoard = (props: SetBoardInterface) => {
                             key={i}
                             index={i}
                             state={state}
+                            tiny={false}
                         />
                     );
                 })}

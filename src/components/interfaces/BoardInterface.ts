@@ -1,8 +1,10 @@
 export interface BoardInterface {
     player: string;
-    turn: boolean;
+    turn?: boolean;
     board: string[];
-    fire: (index: number, computer: boolean) => void;
+    boardNo: number | undefined;
+    fire?: (index: number | undefined) => void;
+    tiny: boolean;
 }
 
 export interface FleetInterface {
@@ -20,6 +22,7 @@ export interface GridSquareInterface {
     state: string;
     index: number;
     currentCoord: (i: number, click: boolean, rotate: boolean) => void;
+    tiny: boolean;
 }
 
 export interface CalculateOverhangInterface {
@@ -36,10 +39,6 @@ export interface SetBoardInterface {
 
 export interface GameBoardInterface {
     board: string[];
-    shipLocations: {
-        name: string;
-        location: number[];
-    }[];
 }
 
 export interface SetBoardShipInterface {
@@ -50,7 +49,6 @@ export interface SetBoardShipInterface {
 export interface ActionInterface {
     type:
         | "SET_GAME_STATE"
-        | "SET_COMPUTER"
         | "SET_FULL_ERROR"
         | "SET_DISCONNECT_ERROR"
         | "SET_WAITING"
@@ -60,15 +58,20 @@ export interface ActionInterface {
         | "SET_ROOMS"
         | "SET_YOU"
         | "SET_OPPONENT"
-        | "SET_SELECTED_SHIP";
+        | "SET_SELECTED_SHIP"
+        | "SET_YOU_NO"
+        | "SET_OPPONENT_NO"
+        | "SET_PLAYER_TOTAL"
+        | "SET_READY_TOTAL";
     payload: any;
 }
 
 export interface StateInterface {
-    you: GameBoardInterface;
-    opponent: GameBoardInterface;
+    you: string[];
+    youNo: number;
+    oppNo: number | undefined;
+    opponents: { player: string; board: string[] }[];
     gameState: "intro" | "setup" | "play";
-    computer: boolean;
     fullError: boolean;
     disconnectError: boolean;
     waiting: boolean;
@@ -77,4 +80,6 @@ export interface StateInterface {
     loser: boolean;
     rooms: string[];
     selectedShip: string;
+    playerTotal: undefined | number;
+    readyTotal: undefined | number;
 }

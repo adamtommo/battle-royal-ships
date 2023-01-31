@@ -98,18 +98,6 @@ const Fleet = (props: FleetInterface) => {
                     <Button onClick={props.onStart}>Play</Button>
                 </>
             ) : null}
-            <Button
-                onClick={() => {
-                    AVAILABLE_SHIPS.forEach((ship) => (ship.placed = false));
-                    props.onShipSelect({
-                        type: "SET_SELECTED_SHIP",
-                        payload: "reset",
-                    });
-                }}
-                variant="secondary"
-            >
-                Reset
-            </Button>
         </Card>
     );
 };

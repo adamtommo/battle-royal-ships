@@ -48,19 +48,6 @@ export const WelcomeScreen = (props: {
                         <Button variant="danger" onClick={handleShow}>
                             View Rooms
                         </Button>
-                        <h2 className={classes.title}>OR</h2>
-                        <Button
-                            onClick={() => {
-                                props.setRoomName(
-                                    Math.random()
-                                        .toString(36)
-                                        .substring(2, 999),
-                                    false
-                                );
-                            }}
-                        >
-                            Play Computer
-                        </Button>
                     </Form.Group>
                 </Form>
             </Container>
