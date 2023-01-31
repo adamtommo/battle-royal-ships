@@ -312,10 +312,10 @@ const Game = () => {
                 <Row>
                     {state.readyTotal !== undefined &&
                     state.gameState === "waiting" ? (
-                        <p>
-                            Ready: {state.readyTotal} Players Joined:{" "}
-                            {state.playerTotal}
-                        </p>
+                        <>
+                            <p>Ready: {state.readyTotal}</p>
+                            <p>Players Joined:{state.playerTotal}</p>
+                        </>
                     ) : null}
                     {state.readyTotal === state.playerTotal &&
                     state.playerTotal > 1 ? (
