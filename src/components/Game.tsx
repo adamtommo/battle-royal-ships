@@ -104,9 +104,9 @@ const Game = () => {
                 dispatch({ type: "SET_ROOMS", payload: message.rooms });
             }
             if (type === "kick") {
-                window.onload = () =>
-                    dispatch({ type: "SET_DISCONNECT_ERROR", payload: true });
-                window.location.reload();
+                if (state.gameState !== "endgame") {
+                    window.location.reload();
+                }
             }
             if (type === "start") {
                 dispatch({
@@ -209,7 +209,12 @@ const Game = () => {
                     </Modal>
                     <Modal show={state.loser}>
                         <Modal.Body>
-                            <Alert variant="danger"> You LOSE!</Alert>
+                            <Alert variant="danger">You LOSE!</Alert>
+                            <p>
+                                You can still take revenge and fire upon the
+                                remaining players when it's you turn... that's
+                                if it's not over!
+                            </p>
                         </Modal.Body>
                         <Modal.Footer>
                             <Button
@@ -264,6 +269,13 @@ const Game = () => {
                 />
             ) : null}
             <Container>
+                {state.gameState === "setup" ||
+                state.gameState === "waiting" ? (
+                    <p>
+                        Note: If anyone leaves the game, it will end. So don't
+                        leave please!
+                    </p>
+                ) : null}
                 <Row>
                     <Col xs={2}>
                         {state.gameState === "setup" ? (

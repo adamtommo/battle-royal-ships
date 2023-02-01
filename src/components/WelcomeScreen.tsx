@@ -16,13 +16,15 @@ export const WelcomeScreen = (props: {
     return (
         <>
             <Container className={classes.main}>
-                <h1>Welcome to Battleship!</h1>
+                <h1>Welcome to BattleRoyalship!</h1>
                 <h2 className={classes.title}>Rules</h2>
                 <p className={classes.intro}>
-                    You and your opponent are competing navy commanders. Your
+                    You and your opponents are competing navy commanders. Your
                     fleets are positioned at secret coordinates, and you take
-                    turns firing torpedoes at each other. The first to sink the
-                    other person’s whole fleet wins!
+                    turns firing torpedoes at each other. The last person
+                    standing wins! If you lose don't worry, you can still fire
+                    upon the remaining players! You'll know it's you turn when
+                    the opponent board lights up!
                 </p>
                 <h2 className={classes.title}>Enter Room Name</h2>
                 <Form>
