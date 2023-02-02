@@ -105,7 +105,8 @@ const Game = () => {
             }
             if (type === "kick") {
                 if (state.gameState !== "endgame") {
-                    window.location.reload();
+                    dispatch({ type: "SET_DISCONNECT_ERROR", payload: true });
+                    console.log("Disconnected");
                 }
             }
             if (type === "start") {
@@ -185,10 +186,18 @@ const Game = () => {
             });
         }
     };
+    if (
+        (state.gameState === "play" || state.gameState === "setup") &&
+        state.disconnectError === false
+    ) {
+        window.onbeforeunload = () => "";
+    }
 
     return (
         <>
-            {state.gameState === "play" || state.gameState === "endgame" ? (
+            {state.gameState === "play" ||
+            state.gameState === "endgame" ||
+            state.gameState === "setup" ? (
                 <>
                     <Modal show={state.winner}>
                         <Modal.Body>
@@ -229,25 +238,30 @@ const Game = () => {
                             </Button>
                         </Modal.Footer>
                     </Modal>
+                    <Modal show={state.disconnectError}>
+                        <Modal.Body>
+                            <Alert variant="warning">
+                                Player Disconnected!
+                            </Alert>
+                            <p>A player disconnected!</p>
+                            <p>
+                                Please go shame them for being a party pooper.
+                            </p>
+                        </Modal.Body>
+                        <Modal.Footer>
+                            <Button
+                                onClick={() => {
+                                    window.location.reload();
+                                }}
+                            >
+                                Return
+                            </Button>
+                        </Modal.Footer>
+                    </Modal>
                 </>
             ) : null}
             {state.waiting ? (
                 <Alert variant="info"> Waiting to start</Alert>
-            ) : null}
-            {state.disconnectError ? (
-                <Alert
-                    variant="warning"
-                    onClose={() =>
-                        dispatch({
-                            type: "SET_DISCONNECT_ERROR",
-                            payload: false,
-                        })
-                    }
-                    dismissible
-                >
-                    {" "}
-                    Player Disconnected
-                </Alert>
             ) : null}
             {state.fullError ? (
                 <Alert
