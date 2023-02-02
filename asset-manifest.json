@@ -1,15 +1,15 @@
 {
   "files": {
     "main.css": "/battle-royal-ships/static/css/main.4338ae6e.css",
-    "main.js": "/battle-royal-ships/static/js/main.5dbb1b75.js",
+    "main.js": "/battle-royal-ships/static/js/main.1b77a2c3.js",
     "static/js/787.9ac28e96.chunk.js": "/battle-royal-ships/static/js/787.9ac28e96.chunk.js",
     "index.html": "/battle-royal-ships/index.html",
     "main.4338ae6e.css.map": "/battle-royal-ships/static/css/main.4338ae6e.css.map",
-    "main.5dbb1b75.js.map": "/battle-royal-ships/static/js/main.5dbb1b75.js.map",
+    "main.1b77a2c3.js.map": "/battle-royal-ships/static/js/main.1b77a2c3.js.map",
     "787.9ac28e96.chunk.js.map": "/battle-royal-ships/static/js/787.9ac28e96.chunk.js.map"
   },
   "entrypoints": [
     "static/css/main.4338ae6e.css",
-    "static/js/main.5dbb1b75.js"
+    "static/js/main.1b77a2c3.js"
   ]
 }
